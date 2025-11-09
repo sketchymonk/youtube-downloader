@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>YouTube Downloader - iPad Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 40px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 24px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1em;
+            opacity: 0.95;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 24px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 8px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+            -webkit-appearance: none;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+            -webkit-appearance: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.95);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .download-card {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .download-card.show {
+            display: block;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .video-info {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .thumbnail {
+            width: 160px;
+            height: 90px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            flex-shrink: 0;
+        }
+
+        .video-details {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .video-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+
+        .video-meta {
+            color: #718096;
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+
+        .quality-section {
+            margin-top: 20px;
+        }
+
+        .section-title {
+            font-size: 1em;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quality-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        .quality-btn {
+            padding: 14px 10px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 0.95em;
+            -webkit-appearance: none;
+        }
+
+        .quality-btn:active {
+            background: #667eea;
+            color: white;
+            transform: scale(0.95);
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.3s;
+            border-left: 4px solid;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-color: #3182ce;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-color: #38a169;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #c53030;
+            border-color: #e53e3e;
+        }
+
+        .alert-warning {
+            background: #feebc8;
+            color: #744210;
+            border-color: #dd6b20;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .instructions {
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            border: 2px solid #fc8181;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .instructions h3 {
+            color: #c53030;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            color: #742a2a;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .copy-btn {
+            background: #fc8181;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            margin-top: 12px;
+            cursor: pointer;
+            font-size: 0.9em;
+            -webkit-appearance: none;
+        }
+
+        .copy-btn:active {
+            background: #f56565;
+            transform: scale(0.95);
+        }
+
+        .service-info {
+            background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 24px;
+        }
+
+        .service-info h3 {
+            color: #234e52;
+            margin-bottom: 12px;
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .service-card {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .service-card .emoji {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .service-card .name {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.9em;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+            font-size: 0.85em;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+            
+            .video-info {
+                flex-direction: column;
+            }
+            
+            .thumbnail {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 16/9;
+            }
+            
+            .quality-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 YouTube Downloader</h1>
+            <p>iPad & Mobile Friendly</p>
+            <div class="badge">✨ Works in Safari</div>
+        </div>
+
+        <div class="content">
+            <div class="instructions">
+                <h3>📱 How to Use on iPad:</h3>
+                <ol>
+                    <li>Paste a YouTube URL below</li>
+                    <li>Tap "Analyze Video"</li>
+                    <li>Copy the download link that appears</li>
+                    <li>Open it in Safari (it redirects to a download site)</li>
+                    <li>Choose your quality and download!</li>
+                </ol>
+                <p style="margin-top: 12px; font-style: italic; color: #742a2a;">
+                    💡 This works because we use free online services that are iPad-compatible!
+                </p>
+            </div>
+
+            <div id="alert" class="alert"></div>
+
+            <div class="input-group">
+                <label>YouTube Video URL</label>
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="urlInput" 
+                        placeholder="https://youtube.com/watch?v=..."
+                    >
+                    <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeVideo()">
+                        <span id="analyzeIcon">🔍</span>
+                        <span id="analyzeText">Analyze</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="downloadCard" class="download-card">
+                <div class="video-info">
+                    <img id="thumbnail" class="thumbnail" src="" alt="">
+                    <div class="video-details">
+                        <div id="videoTitle" class="video-title"></div>
+                        <div id="videoChannel" class="video-meta"></div>
+                        <div id="videoDuration" class="video-meta"></div>
+                    </div>
+                </div>
+
+                <div class="quality-section">
+                    <div class="section-title">
+                        <span>📥</span>
+                        <span>Download Options</span>
+                    </div>
+                    <div id="downloadLinks"></div>
+                </div>
+            </div>
+
+            <div class="service-info">
+                <h3>🌐 Powered by Free Services:</h3>
+                <p style="color: #234e52; margin-bottom: 12px; font-size: 0.95em;">
+                    This tool connects you to free online downloaders that work on iPad:
+                </p>
+                <div class="service-grid">
+                    <div class="service-card">
+                        <div class="emoji">⚡</div>
+                        <div class="name">Y2Mate</div>
+                    </div>
+                    <div class="service-card">
+                        <div class="emoji">🎵</div>
+                        <div class="name">YTMP3</div>
+                    </div>
+                    <div class="service-card">
+                        <div class="emoji">🚀</div>
+                        <div class="name">SaveFrom</div>
+                    </div>
+                    <div class="service-card">
+                        <div class="emoji">💎</div>
+                        <div class="name">9Convert</div>
+                    </div>
+                </div>
+                <p style="color: #234e52; margin-top: 12px; font-size: 0.85em; font-style: italic;">
+                    All free, no installation required, works on any device!
+                </p>
+            </div>
+
+            <div class="footer">
+                ⚠️ Only download videos you have permission to use. Respect copyright laws.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showAlert(message, type = 'info') {
+            const alert = document.getElementById('alert');
+            alert.className = `alert alert-${type} show`;
+            alert.textContent = message;
+            setTimeout(() => alert.classList.remove('show'), 5000);
+        }
+
+        function getVideoId(url) {
+            // Extract video ID from various YouTube URL formats
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\?\/\s]{11})/,
+                /^([^&\?\/\s]{11})$/
+            ];
+            
+            for (let pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) return match[1];
+            }
+            return null;
+        }
+
+        async function analyzeVideo() {
+            const url = document.getElementById('urlInput').value.trim();
+            if (!url) {
+                showAlert('Please enter a YouTube URL', 'error');
+                return;
+            }
+
+            const videoId = getVideoId(url);
+            if (!videoId) {
+                showAlert('Invalid YouTube URL format', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('analyzeBtn');
+            btn.disabled = true;
+            document.getElementById('analyzeIcon').textContent = '⏳';
+            document.getElementById('analyzeText').textContent = 'Loading...';
+
+            // No need for API call - just use the video ID directly
+            // Display video info using just the video ID
+            document.getElementById('thumbnail').src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+            document.getElementById('videoTitle').textContent = 'YouTube Video';
+            document.getElementById('videoChannel').textContent = `📺 Ready to download`;
+            document.getElementById('videoDuration').textContent = `🔗 Video ID: ${videoId}`;
+
+            // Create download links
+            const linksContainer = document.getElementById('downloadLinks');
+            const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+            
+            const services = [
+                {
+                    name: 'Y2Mate (All Qualities)',
+                    url: `https://www.y2mate.com/youtube/${videoId}`,
+                    emoji: '🎥',
+                    color: '#667eea'
+                },
+                {
+                    name: 'YTMP3 (Audio Only)',
+                    url: `https://ytmp3.nu/w37E/?url=${encodeURIComponent(videoUrl)}`,
+                    emoji: '🎵',
+                    color: '#38a169'
+                },
+                {
+                    name: 'SaveFrom (Fast)',
+                    url: `https://savefrom.net/#url=${encodeURIComponent(videoUrl)}`,
+                    emoji: '⚡',
+                    color: '#dd6b20'
+                },
+                {
+                    name: '9Convert (HD)',
+                    url: `https://9convert.com/en/search?query=${encodeURIComponent(videoUrl)}`,
+                    emoji: '💎',
+                    color: '#805ad5'
+                }
+            ];
+
+            linksContainer.innerHTML = services.map(service => `
+                <div style="background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 2px solid ${service.color};">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.5em;">${service.emoji}</span>
+                            <strong style="color: #2d3748; font-size: 0.95em;">${service.name}</strong>
+                        </div>
+                    </div>
+                    <a href="${service.url}" target="_blank" style="display: block; background: ${service.color}; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9em;">
+                        Open & Download →
+                    </a>
+                </div>
+            `).join('');
+
+            document.getElementById('downloadCard').classList.add('show');
+            showAlert('✅ Ready to download! Tap any service below', 'success');
+
+            btn.disabled = false;
+            document.getElementById('analyzeIcon').textContent = '🔍';
+            document.getElementById('analyzeText').textContent = 'Analyze';
+        }
+
+        // Allow Enter key to trigger analysis
+        document.getElementById('urlInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                analyzeVideo();
+            }
+        });
+
+        // Set sample URL on load for testing
+        window.addEventListener('load', () => {
+            document.getElementById('urlInput').value = 'https://youtu.be/dQw4w9WgXcQ';
+        });
+    </script>
+</body>
+</html>
