@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>YouTube Video Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 24px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .content {
+            padding: 24px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 8px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .video-card {
+            background: #f7fafc;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .video-card.show {
+            display: block;
+            animation: slideUp 0.4s;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .video-info {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .thumbnail {
+            width: 160px;
+            height: 90px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .video-details {
+            flex: 1;
+        }
+
+        .video-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .video-meta {
+            color: #718096;
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+
+        .quality-section {
+            margin-top: 20px;
+        }
+
+        .section-title {
+            font-size: 1em;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .quality-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .quality-btn {
+            padding: 14px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .quality-btn:active {
+            background: #667eea;
+            color: white;
+            transform: scale(0.95);
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            border-left: 4px solid;
+        }
+
+        .alert.show {
+            display: block;
+            animation: slideIn 0.3s;
+        }
+
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-color: #3182ce;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-color: #38a169;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #c53030;
+            border-color: #e53e3e;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .video-info {
+                flex-direction: column;
+            }
+            
+            .thumbnail {
+                width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 YouTube Downloader</h1>
+            <p>Real Video Downloads - iPad Friendly</p>
+        </div>
+
+        <div class="content">
+            <div id="alert" class="alert"></div>
+
+            <div class="input-group">
+                <label>YouTube Video URL</label>
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="urlInput" 
+                        placeholder="https://youtube.com/watch?v=..."
+                        value="https://youtu.be/dQw4w9WgXcQ"
+                    >
+                    <button class="btn" id="fetchBtn" onclick="fetchVideo()">
+                        <span id="btnText">Fetch</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="videoCard" class="video-card">
+                <div class="video-info">
+                    <img id="thumbnail" class="thumbnail" src="" alt="">
+                    <div class="video-details">
+                        <div id="videoTitle" class="video-title"></div>
+                        <div id="videoAuthor" class="video-meta"></div>
+                        <div id="videoDuration" class="video-meta"></div>
+                    </div>
+                </div>
+
+                <div class="quality-section">
+                    <div class="section-title">📥 Download Quality</div>
+                    <div id="qualityGrid" class="quality-grid"></div>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px; padding: 16px; background: #fff5f5; border-radius: 12px; border: 2px solid #fc8181;">
+                <h3 style="color: #c53030; margin-bottom: 8px; font-size: 0.95em;">⚠️ Important Note</h3>
+                <p style="color: #742a2a; font-size: 0.9em; line-height: 1.5;">
+                    This uses a free API service. If downloads don't work, it means the free API is down or rate-limited. 
+                    The app is functional, but depends on external services.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showAlert(message, type = 'info') {
+            const alert = document.getElementById('alert');
+            alert.className = `alert alert-${type} show`;
+            alert.textContent = message;
+            setTimeout(() => alert.classList.remove('show'), 5000);
+        }
+
+        function getVideoId(url) {
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\?\/\s]{11})/,
+                /^([^&\?\/\s]{11})$/
+            ];
+            
+            for (let pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) return match[1];
+            }
+            return null;
+        }
+
+        async function fetchVideo() {
+            const url = document.getElementById('urlInput').value.trim();
+            if (!url) {
+                showAlert('Please enter a YouTube URL', 'error');
+                return;
+            }
+
+            const videoId = getVideoId(url);
+            if (!videoId) {
+                showAlert('Invalid YouTube URL', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('fetchBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div><span>Loading...</span>';
+
+            try {
+                // Use a free YouTube API proxy
+                const apiUrl = `https://yt-api.p.rapidapi.com/dl?id=${videoId}`;
+                
+                // Try using Invidious API as a free alternative
+                const invidiousUrl = `https://inv.riverside.rocks/api/v1/videos/${videoId}`;
+                
+                const response = await fetch(invidiousUrl);
+                
+                if (!response.ok) throw new Error('Could not fetch video info');
+                
+                const data = await response.json();
+
+                // Display video info
+                document.getElementById('thumbnail').src = data.videoThumbnails[0]?.url || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                document.getElementById('videoTitle').textContent = data.title;
+                document.getElementById('videoAuthor').textContent = `📺 ${data.author}`;
+                document.getElementById('videoDuration').textContent = `⏱️ ${Math.floor(data.lengthSeconds / 60)}:${(data.lengthSeconds % 60).toString().padStart(2, '0')}`;
+
+                // Create quality options
+                const qualityGrid = document.getElementById('qualityGrid');
+                const formats = data.formatStreams || [];
+                
+                if (formats.length === 0) {
+                    qualityGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #718096;">No download formats available from this API</p>';
+                } else {
+                    const uniqueQualities = [...new Set(formats.map(f => f.qualityLabel).filter(Boolean))];
+                    
+                    qualityGrid.innerHTML = uniqueQualities.map(quality => {
+                        const format = formats.find(f => f.qualityLabel === quality);
+                        return `
+                            <button class="quality-btn" onclick="downloadVideo('${format.url}', '${quality}')">
+                                ${quality}
+                            </button>
+                        `;
+                    }).join('');
+                }
+
+                document.getElementById('videoCard').classList.add('show');
+                showAlert('✅ Video loaded! Tap a quality to download', 'success');
+
+            } catch (error) {
+                console.error(error);
+                showAlert('Failed to fetch video. The free API may be down. Try again later.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>Fetch</span>';
+            }
+        }
+
+        function downloadVideo(url, quality) {
+            try {
+                // Open the direct video URL
+                window.open(url, '_blank');
+                showAlert(`Opening ${quality} download...`, 'success');
+            } catch (error) {
+                showAlert('Failed to open download link', 'error');
+            }
+        }
+
+        // Allow Enter key
+        document.getElementById('urlInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') fetchVideo();
+        });
+    </script>
+</body>
+</html>
